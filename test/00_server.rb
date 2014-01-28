@@ -24,6 +24,8 @@ class MyController < ControllerBase
 end
 
 server.mount_proc '/' do |req, res|
+  res.content_type = "text/text"
+  res.body = res.path
   MyController.new(req, res).go
 end
 

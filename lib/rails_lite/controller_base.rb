@@ -9,28 +9,47 @@ class ControllerBase
 
   # setup the controller
   def initialize(req, res, route_params = {})
+    @req = req
+    @res = res
   end
 
   # populate the response with content
   # set the responses content type to the given type
   # later raise an error if the developer tries to double render
   def render_content(content, type)
+    raise "Already rendered" if already_rendered?
+
+    @res.content_type = type
+    @res.body = content
+
+    @already_built_response = :once
   end
 
   # helper method to alias @already_rendered
   def already_rendered?
+    !!@already_built_response
   end
 
   # set the response status code and header
   def redirect_to(url)
-  end
+    raise "Already rendered" if already_rendered?
+    @res.status = 302
+    @res["location"] = url
 
-  def render_content(content, type)
+    @already_built_response = :once
   end
 
   # use ERB and binding to evaluate templates
   # pass the rendered html to render_content
   def render(template_name)
+  render_content(
+    ERB.new(
+      File.read(
+        "views/#{self.class.name.underscore}/#{template_name}.html.erb"
+      )
+    ).result(binding),
+    "text/html"
+  )
   end
 
   # method exposing a `Session` object
