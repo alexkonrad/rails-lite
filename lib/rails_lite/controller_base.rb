@@ -11,6 +11,7 @@ class ControllerBase
   def initialize(req, res, route_params = {})
     @req = req
     @res = res
+    @params = Params.new(req, route_params)
   end
 
   # populate the response with content
@@ -21,6 +22,8 @@ class ControllerBase
 
     @res.content_type = type
     @res.body = content
+
+    self.session.store_session(@res)
 
     @already_built_response = :once
   end
@@ -35,6 +38,8 @@ class ControllerBase
     raise "Already rendered" if already_rendered?
     @res.status = 302
     @res["location"] = url
+
+    session.store_session(@res)
 
     @already_built_response = :once
   end
@@ -54,6 +59,7 @@ class ControllerBase
 
   # method exposing a `Session` object
   def session
+    @session ||= Session.new(@req)
   end
 
   # use this with the router to call action_name (:index, :show, :create...)
